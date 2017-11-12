@@ -1,8 +1,8 @@
 var mysql      = require('mysql');
 var connection = mysql.createConnection({
-    host     : 'localhost',
-    user     : 'root',
-    password : '123456',
+    host     : '116.196.102.8',
+    user     : 'localyxc',
+    password : 'yxc123456',
     database : 'weixin_data'
 });
 
