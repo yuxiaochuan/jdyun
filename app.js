@@ -1,14 +1,16 @@
-var mysql      = require('mysql');
-var connection = mysql.createConnection({
-    host     : '116.196.102.8',
-    user     : 'localyxc',
-    password : 'yxc123456',
-    database : 'weixin_data'
+var express = require('express');
+var app = new express();
+
+var user = require('./public/users');
+
+app.use(express.static('public')); //静态资源的入口
+app.use('/user',user);
+// app.use('/',function (req, res) {
+//     res.sendfile(__dirname + "/" + "views/index.html" );
+// });
+app.all('/', function(req, res, next){
+    res.sendfile(__dirname + "/" + "views/index.html" );
 });
-
-connection.connect();
-
-connection.query('SELECT * FROM descrip', function (error, results, fields) {
-    if (error) throw error;
-    console.log(results);
+var server = app.listen(3000, function () {
+    console.log("start");
 });
