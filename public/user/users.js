@@ -1,16 +1,16 @@
-var dbConfig = require('../db/DBConfig');
-var User = require('../db/usersql');
+var dbConfig = require('../../db/DBConfig');
+var User = require('../../db/usersql');
 var mysql = require('mysql'); // 引入mysql依赖
 var express = require('express');
 var router = express.Router();
 var client = mysql.createConnection(dbConfig.mysql); // 建立连接
 
+var utfString = {'Content-Type':'text/html;charset=utf-8'};
 
 
 // 注册接口
-router.all('/user/register', function(req, res, next){
-    console.log("1123123123");
-    console.log(req.query);
+router.all('/register', function(req, res, next){
+    res.writeHead(200, utfString);
     if (req.method == "POST") {
         var param = req.body;
     } else{
@@ -22,8 +22,9 @@ router.all('/user/register', function(req, res, next){
         }else{
             // 数据库不存在 就注册成功
             if (results.length == 0) {
+                var idString = new Date().getTime().toString() + Math.ceil(Math.random()*10000).toString();
                 // 把新用户插入数据库
-                client.query(User.insert,[param.username,param.password,getDataStr(),'',''],function (err, results) {
+                client.query(User.insert,[param.username,param.password,new Date(),'h5-web', idString],function (err, results) {
                     if(err){
                         throw err
                     }else{
@@ -39,16 +40,19 @@ router.all('/user/register', function(req, res, next){
 
 
 // 登录接口
-router.all('/user/login', function(req, res, next){
+router.all('/login', function(req, res, next){
+    res.writeHead(200, utfString);
     if (req.method == "POST") {
         var param = req.body;
     } else{
         var param = req.query || req.params;
     }
+
     client.query(User.getUserByInfo,[param.username,param.password],function (err, results){
         if (err){
             throw err
         }else{
+            console.log(param);
             // 数据库存在
             if (results.length == 0) {
                 res.end(JSON.stringify({status:'102',msg:'用户名或密码错误'}));
@@ -56,19 +60,21 @@ router.all('/user/login', function(req, res, next){
                 if (results[0].username == param.username && results[0].password == param.password) {
                     res.end(JSON.stringify({status:'100',msg:'登录成功'}));
                 }
+                else {
+                    res.end(JSON.stringify({status:'102',msg:'用户名或密码错误'}));
+                }
             }
         }
     })
 });
 
 // 第三方登陆接口
-router.all('/user/thirdlogin', function(req, res, next){
+router.all('/thirdlogin', function(req, res, next){
     if (req.method == "POST") {
         var param = req.body;
     } else{
         var param = req.query || req.params;
     }
-    console.log(param.openid);
     client.query(User.getUserByOpenid,[param.openid],function (err, results){
         if (err){
             throw err
@@ -85,7 +91,7 @@ router.all('/user/thirdlogin', function(req, res, next){
 
 
 // 绑定接口
-router.all('/user/bangding', function(req, res, next){
+router.all('/bangding', function(req, res, next){
     if (req.method == "POST") {
         var param = req.body;
     } else{
