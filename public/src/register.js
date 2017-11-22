@@ -23,7 +23,9 @@ $(function () {
                 dataType: "json",
                 success: function (result) {
                     if (result.status == "100") {
-                        location.href = "/index";
+                        $("#js-submit").addClass("btn-success").html("注册成功，点击登录").off("click").on("click", function () {
+                            location.href = "/login";
+                        });
                     }
                     else {
                         alert(result.msg);

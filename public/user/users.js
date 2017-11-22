@@ -2,40 +2,57 @@ var dbConfig = require('../../db/DBConfig');
 var User = require('../../db/usersql');
 var mysql = require('mysql'); // 引入mysql依赖
 var express = require('express');
+var bodyParser = require('body-parser');
+var cookieParser = require('cookie-parser');
+var session = require('cookie-session');
+
+
 var router = express.Router();
 var client = mysql.createConnection(dbConfig.mysql); // 建立连接
-
 var utfString = {'Content-Type':'text/html;charset=utf-8'};
+
+router.use(bodyParser.urlencoded({ extended: true }));
+router.use(cookieParser());
+router.use(session({
+    secret: 'yxcamwy', //secret的值建议使用随机字符串
+    cookie: {maxAge: 60 * 1000 * 60} // 过期时间（毫秒）
+}));
 
 
 // 注册接口
 router.all('/register', function(req, res, next){
     res.writeHead(200, utfString);
-    if (req.method == "POST") {
-        var param = req.body;
-    } else{
-        var param = req.query || req.params;
-    }
-    client.query(User.getUserByInfo,[param.username,param.password],function (err, results){
-        if (err){
-            throw err
-        }else{
-            // 数据库不存在 就注册成功
-            if (results.length == 0) {
-                var idString = new Date().getTime().toString() + Math.ceil(Math.random()*10000).toString();
-                // 把新用户插入数据库
-                client.query(User.insert,[param.username,param.password,new Date(),'h5-web', idString],function (err, results) {
-                    if(err){
-                        throw err
-                    }else{
-                        res.end(JSON.stringify({status:'100',msg:'注册成功!'}));
-                    }
-                })
-            } else{ // 数据库存在就注册失败
-                res.end(JSON.stringify({status:'101',msg:'该用户名已经被注册'}));
-            }
+    if (req.session.sign) {//检查用户是否已经登录
+        console.log(req.session);//打印session的值
+        location.href = "/";
+    } else {
+        if (req.method == "POST") {
+            var param = req.body;
         }
-    })
+        else{
+            var param = req.query || req.params;
+        }
+        client.query(User.getUserByInfo,[param.username,param.password],function (err, results){
+            if (err){
+                throw err
+            }else{
+                // 数据库不存在 就注册成功
+                if (results.length == 0) {
+                    var idString = new Date().getTime().toString() + Math.ceil(Math.random()*10000).toString();
+                    // 把新用户插入数据库
+                    client.query(User.insert,[param.username,param.password,new Date(),'h5-web', idString],function (err, results) {
+                        if(err){
+                            throw err
+                        }else{
+                            res.end(JSON.stringify({status:'100',msg:'注册成功!'}));
+                        }
+                    })
+                } else{ // 数据库存在就注册失败
+                    res.end(JSON.stringify({status:'101',msg:'该用户名已经被注册'}));
+                }
+            }
+        })
+    }
 });
 
 
@@ -58,7 +75,9 @@ router.all('/login', function(req, res, next){
                 res.end(JSON.stringify({status:'102',msg:'用户名或密码错误'}));
             } else{
                 if (results[0].username == param.username && results[0].password == param.password) {
-                    res.end(JSON.stringify({status:'100',msg:'登录成功'}));
+                    res.location("/");
+                    req.session.sign = true;
+                    req.session.name = 'yxc"s web';
                 }
                 else {
                     res.end(JSON.stringify({status:'102',msg:'用户名或密码错误'}));

@@ -16,7 +16,7 @@ app.all('/register', function(req, res, next){
 app.all('/login', function(req, res, next){
     res.sendfile(__dirname + "/" + "views/login.html" );
 });
-app.all('/index', function(req, res, next){
+app.all('/', function(req, res, next){
     res.sendfile(__dirname + "/" + "views/index.html" );
 });
 var server = app.listen(3000, function () {
